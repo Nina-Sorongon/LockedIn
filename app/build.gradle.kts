@@ -41,4 +41,16 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+    // Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+
+    // Add Firebase Auth dependency
+    implementation("com.google.firebase:firebase-auth")
+    // If using Analytics, ensure it is added too
+    implementation("com.google.firebase:firebase-analytics")
+
 }
+
+// Apply the Google Services plugin
+apply(plugin = "com.google.gms.google-services")

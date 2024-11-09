@@ -3,54 +3,47 @@ package com.example.firstapp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-public class LoginActivity extends AppCompatActivity {
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
-    private EditText emailEditText, passwordEditText;
+public class LoginActivity extends AppCompatActivity {
+    private FirebaseAuth mAuth;
+    private EditText emailField, passwordField;
     private Button loginBtn;
-    private DatabaseHelper databaseHelper;
-    private TextView signupTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        emailEditText = findViewById(R.id.email);
-        passwordEditText = findViewById(R.id.password);
+        mAuth = FirebaseAuth.getInstance();
+        emailField = findViewById(R.id.email);
+        passwordField = findViewById(R.id.password);
         loginBtn = findViewById(R.id.loginbtn);
-        signupTextView = findViewById(R.id.signupbtn); // Initialize the signupTextView
-
-        databaseHelper = new DatabaseHelper(this);
 
         loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String email = emailEditText.getText().toString();
-                String password = passwordEditText.getText().toString();
+                String email = emailField.getText().toString().trim();
+                String password = passwordField.getText().toString().trim();
 
-                boolean isUserExist = databaseHelper.checkUser(email, password);
-                if (isUserExist) {
-                    Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(LoginActivity.this, ProjectsActivity.class));
-                } else {
-                    Toast.makeText(LoginActivity.this, "Invalid Credentials", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        signupTextView.setOnClickListener(new View.OnClickListener() { // Set the onClick listener for signupTextView
-            @Override
-            public void onClick(View view) {
-                // Redirect to the SignUpActivity when clicked
-                Intent signupIntent = new Intent(LoginActivity.this, SignUpActivity.class);
-                startActivity(signupIntent);
+                mAuth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                FirebaseUser user = mAuth.getCurrentUser();
+                                Toast.makeText(LoginActivity.this, "Login successful.", Toast.LENGTH_SHORT).show();
+                                // Redirect to main activity or dashboard
+                            } else {
+                                Toast.makeText(LoginActivity.this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
             }
         });
     }

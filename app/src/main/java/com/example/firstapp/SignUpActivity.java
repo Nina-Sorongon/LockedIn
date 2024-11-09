@@ -1,62 +1,57 @@
 package com.example.firstapp;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-public class SignUpActivity extends AppCompatActivity {
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseUser;
 
-    private TextView loginTextView;
-    private EditText emailEditText, passwordEditText, confirmPasswordEditText;
+public class SignUpActivity extends AppCompatActivity {
+    private FirebaseAuth mAuth;
+    private EditText emailField, passwordField, confirmPasswordField;
     private Button signupBtn;
-    private DatabaseHelper databaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
-        emailEditText = findViewById(R.id.email);
-        passwordEditText = findViewById(R.id.password);
-        confirmPasswordEditText = findViewById(R.id.confirm_password);
+        mAuth = FirebaseAuth.getInstance();
+        emailField = findViewById(R.id.email);
+        passwordField = findViewById(R.id.password);
+        confirmPasswordField = findViewById(R.id.confirm_password);
         signupBtn = findViewById(R.id.signupbtn);
-        loginTextView = findViewById(R.id.loginbtn); // Initialize loginTextView
-
-        databaseHelper = new DatabaseHelper(this);
 
         signupBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String email = emailEditText.getText().toString();
-                String password = passwordEditText.getText().toString();
-                String confirmPassword = confirmPasswordEditText.getText().toString();
+                String email = emailField.getText().toString().trim();
+                String password = passwordField.getText().toString().trim();
+                String confirmPassword = confirmPasswordField.getText().toString().trim();
 
                 if (password.equals(confirmPassword)) {
-                    boolean isInserted = databaseHelper.addUser(email, password);
-                    if (isInserted) {
-                        Toast.makeText(SignUpActivity.this, "Registration Successful", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(SignUpActivity.this, LoginActivity.class));
-                    } else {
-                        Toast.makeText(SignUpActivity.this, "Registration Failed", Toast.LENGTH_SHORT).show();
-                    }
+                    mAuth.createUserWithEmailAndPassword(email, password)
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    FirebaseUser user = mAuth.getCurrentUser();
+                                    Toast.makeText(SignUpActivity.this, "Registration successful.", Toast.LENGTH_SHORT).show();
+                                    // Redirect to login or other activity
+                                } else if (task.getException() instanceof FirebaseAuthUserCollisionException) {
+                                    Toast.makeText(SignUpActivity.this, "User already exists.", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(SignUpActivity.this, "Registration failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
                 } else {
-                    Toast.makeText(SignUpActivity.this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SignUpActivity.this, "Passwords do not match.", Toast.LENGTH_SHORT).show();
                 }
-            }
-        });
-
-        loginTextView.setOnClickListener(new View.OnClickListener() { // Set the onClick listener for loginTextView
-            @Override
-            public void onClick(View view) {
-                // Redirect to the LoginActivity when clicked
-                Intent loginIntent = new Intent(SignUpActivity.this, LoginActivity.class);
-                startActivity(loginIntent);
             }
         });
     }

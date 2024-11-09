@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1080949937803",
+    "project_id": "lockedin-dny",
+    "storage_bucket": "lockedin-dny.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1080949937803:android:2f25d5732fd91939ff668e",
+        "android_client_info": {
+          "package_name": "com.example.firstapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXdjkpVFAHNo9h-_32Y9yn55t0wVHE1Dk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

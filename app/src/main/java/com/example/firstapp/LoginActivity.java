@@ -2,6 +2,7 @@ package com.example.firstapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -28,6 +29,11 @@ public class LoginActivity extends AppCompatActivity {
         passwordField = findViewById(R.id.password);
         loginBtn = findViewById(R.id.loginbtn);
 
+        // If logging in from signup activity put in email of the signed up user
+        Intent i = getIntent();
+        String signedupuseremail = i.getStringExtra("email");
+        emailField.setText(signedupuseremail);
+
         loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -39,7 +45,10 @@ public class LoginActivity extends AppCompatActivity {
                             if (task.isSuccessful()) {
                                 FirebaseUser user = mAuth.getCurrentUser();
                                 Toast.makeText(LoginActivity.this, "Login successful.", Toast.LENGTH_SHORT).show();
-                                // Redirect to main activity or dashboard
+                                // Redirect to projects activity or dashboard
+                                Intent i = new Intent(LoginActivity.this, ProjectsActivity.class);
+                                startActivity(i);
+                                finish();
                             } else {
                                 Toast.makeText(LoginActivity.this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                             }

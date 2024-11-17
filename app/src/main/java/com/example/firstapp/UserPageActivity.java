@@ -24,7 +24,7 @@ public class UserPageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_userpage);
 
-        // Initialize FirebaseAuth
+        // Initialize FirebaseAuthentication
         mAuth = FirebaseAuth.getInstance();
 
         logoutBtn = findViewById(R.id.logout);

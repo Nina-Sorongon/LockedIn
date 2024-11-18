@@ -8,67 +8,56 @@
     android:background="#f9fdfd"
     tools:context=".ProjectsActivity">
 
-
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true">
 
-
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-
+            <!-- User Profile Button -->
             <ImageButton
                 android:id="@+id/user"
                 android:layout_width="53dp"
                 android:layout_height="48dp"
                 android:layout_margin="1dp"
                 android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
                 android:background="@null"
                 android:scaleType="centerInside"
                 android:translationZ="10dp"
-                app:layout_constraintBottom_toTopOf="@id/SampleProject1"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.979"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_chainStyle="packed"
                 app:srcCompat="@drawable/userbtn" />
 
-
-
+            <!-- Logo -->
             <ImageView
                 android:id="@+id/logo"
                 android:layout_width="76dp"
                 android:layout_height="50dp"
                 android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toTopOf="@id/SampleProject1"
-                app:layout_constraintVertical_chainStyle="packed"
-                app:srcCompat="@drawable/logodarkgrey"
-                tools:ignore="MissingConstraints" />
+                app:layout_constraintBottom_toTopOf="@id/taskGroupsRecyclerView"
+                app:srcCompat="@drawable/logodarkgrey" />
 
+            <!-- Task Groups RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/taskGroupsRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="16dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintTop_toBottomOf="@id/logo"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/logo" />
-
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:listitem="@layout/item_task_group_card" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 
+    <!-- New Project Button -->
     <ImageButton
         android:id="@+id/newprojectbtn"
         android:layout_width="223dp"
@@ -82,4 +71,3 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

@@ -62,4 +62,8 @@ public class SignUpActivity extends AppCompatActivity {
             }
         });
     }
+
+    public FirebaseAuth getmAuth() {
+        return mAuth;
+    }
 }

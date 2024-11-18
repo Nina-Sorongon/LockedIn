@@ -2,53 +2,86 @@ package com.example.firstapp;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 public class ProjectsActivity extends AppCompatActivity {
-    private ImageButton userBtn;
-    private ImageButton newprojectBtn;
-    private ImageButton sampleproject1;
+    private RecyclerView taskGroupsRecyclerView;
+    private TaskGroupAdapter adapter;
+    private List<Map<String, Object>> taskGroups;
+    private FirebaseFirestore db;
+    private ActivityResultLauncher<Intent> addGroupLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_projects);
 
-        userBtn = findViewById(R.id.user);
-        newprojectBtn = findViewById(R.id.newprojectbtn);
-        sampleproject1 = findViewById(R.id.SampleProject1);
+        taskGroupsRecyclerView = findViewById(R.id.taskGroupsRecyclerView);
+        taskGroupsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // OnClickListener for userBtn
-        userBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Redirect to UserPageActivity
-                Intent userIntent = new Intent(ProjectsActivity.this, UserPageActivity.class);
-                startActivity(userIntent);
-            }
-        });
+        taskGroups = new ArrayList<>();
+        adapter = new TaskGroupAdapter(this, taskGroups);
+        taskGroupsRecyclerView.setAdapter(adapter);
 
-        // OnClickListener for newprojectBtn
-        newprojectBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Redirect to AddNewGroupActivity
-                Intent addNewGroupIntent = new Intent(ProjectsActivity.this, AddNewGroupActivity.class);
-                startActivity(addNewGroupIntent);
-            }
-        });
+        db = FirebaseFirestore.getInstance();
 
-        sampleproject1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Redirect to AddNewGroupActivity
-                Intent sampleprojectIntent = new Intent(ProjectsActivity.this, TodoActivity.class);
-                startActivity(sampleprojectIntent);
-            }
+        // Initialize ActivityResultLauncher
+        addGroupLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        refreshTaskGroups();
+                    }
+                }
+        );
+
+        fetchTaskGroups();
+
+        ImageButton newprojectBtn = findViewById(R.id.newprojectbtn);
+        newprojectBtn.setOnClickListener(view -> {
+            Intent intent = new Intent(this, AddNewGroupActivity.class);
+            addGroupLauncher.launch(intent);
         });
+    }
+
+    private void fetchTaskGroups() {
+        taskGroups.clear();
+
+        // Get the currently authenticated user ID
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        // Query Firestore to get task groups for this user
+        db.collection("taskGroups")
+                .whereEqualTo("userId", userId) // Filter by userId
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        taskGroups.add(document.getData());
+                    }
+                    adapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to load task groups: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void refreshTaskGroups() {
+        fetchTaskGroups(); // Re-fetch data from Firestore
     }
 }

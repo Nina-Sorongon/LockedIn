@@ -8,14 +8,17 @@
     android:background="#f9fdfd"
     tools:context=".ProjectsActivity">
 
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true">
 
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+
 
             <ImageButton
                 android:id="@+id/user"
@@ -35,6 +38,8 @@
                 app:layout_constraintVertical_chainStyle="packed"
                 app:srcCompat="@drawable/userbtn" />
 
+
+
             <ImageView
                 android:id="@+id/logo"
                 android:layout_width="76dp"
@@ -49,31 +54,17 @@
                 app:srcCompat="@drawable/logodarkgrey"
                 tools:ignore="MissingConstraints" />
 
-            <ImageButton
-                android:id="@+id/SampleProject1"
-                android:layout_width="344dp"
-                android:layout_height="303dp"
-                android:layout_marginTop="60dp"
-                android:background="@null"
-                android:scaleType="centerCrop"
-                app:layout_constraintTop_toBottomOf="@+id/logo"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/taskGroupsRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/sampleproject1" />
+                app:layout_constraintTop_toBottomOf="@+id/logo" />
 
-            <ImageButton
-                android:id="@+id/SampleProject2"
-                android:layout_width="344dp"
-                android:layout_height="303dp"
-                android:layout_marginTop="12dp"
-                android:background="@null"
-                android:scaleType="centerCrop"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.507"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/SampleProject1"
-                app:srcCompat="@drawable/sampleproject2" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>

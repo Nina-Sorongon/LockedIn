@@ -31,6 +31,21 @@
                 app:srcCompat="@drawable/logodarkgrey"
                 tools:ignore="MissingConstraints" />
 
+            <TextView
+                android:id="@+id/taskGroupNameTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:elevation="20dp"
+                android:fontFamily="@font/poppins_bold"
+                android:text="Task Group Name"
+                android:textColor="#FFF"
+                android:textSize="32sp"
+                app:layout_constraintBottom_toBottomOf="@id/SampleProject1"
+                app:layout_constraintEnd_toEndOf="@id/SampleProject1"
+                app:layout_constraintStart_toStartOf="@id/SampleProject1"
+                app:layout_constraintTop_toTopOf="@id/SampleProject1" />
+
             <ImageView
                 android:id="@+id/SampleProject1"
                 android:layout_width="347dp"
@@ -43,7 +58,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/logo"
                 app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/sampletasklist1" />
+                app:srcCompat="@drawable/taskbg" />
 
             <!-- To do list items these r hardcoded lng -nina -->
             <com.google.android.material.card.MaterialCardView

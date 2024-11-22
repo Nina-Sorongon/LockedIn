@@ -2,18 +2,19 @@ package com.example.firstapp;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class AddTaskActivity extends AppCompatActivity {
@@ -22,6 +23,7 @@ public class AddTaskActivity extends AppCompatActivity {
     private ImageButton calendarBtn;
     private long selectedDeadline = 0;
     private String taskGroupId;
+    private EditText taskTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +34,7 @@ public class AddTaskActivity extends AppCompatActivity {
         exitBtn = findViewById(R.id.exitbtn);
         createBtn = findViewById(R.id.createtodobtn);
         calendarBtn = findViewById(R.id.calendarbtn);
+        taskTitle = findViewById(R.id.edittitle);
 
         // Get the task group ID from Intent
         taskGroupId = getIntent().getStringExtra("TASK_GROUP_ID");
@@ -64,7 +67,6 @@ public class AddTaskActivity extends AppCompatActivity {
 
         // Create button setup
         createBtn.setOnClickListener(view -> {
-            // Validate inputs
             if (selectedDeadline == 0) {
                 Toast.makeText(this, "Please set a deadline", Toast.LENGTH_SHORT).show();
                 return;
@@ -72,24 +74,54 @@ public class AddTaskActivity extends AppCompatActivity {
 
             // Create task data
             Map<String, Object> taskData = new HashMap<>();
-            taskData.put("title", "New Task"); // Replace with actual input from the UI
+            taskData.put("title", taskTitle.getText().toString()); // Replace with actual input
             taskData.put("deadline", selectedDeadline);
             taskData.put("status", false); // Default status: not completed
-            taskData.put("groupId", taskGroupId);
 
-            // Save task to Firestore
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("tasks")
-                    .add(taskData)
-                    .addOnSuccessListener(documentReference -> {
-                        Toast.makeText(AddTaskActivity.this, "Task created", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(AddTaskActivity.this, TodoActivity.class);
-                        intent.putExtra("taskGroupId", taskGroupId); // Pass back the task group ID
-                        startActivity(intent);
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(AddTaskActivity.this, "Failed to create task", Toast.LENGTH_SHORT).show();
-                    });
+            // Add task to Firestore
+            addTaskToGroup(taskGroupId, taskData);
         });
+    }
+
+    private void addTaskToGroup(String groupId, Map<String, Object> newTask) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("taskGroups")
+                .document(groupId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        List<Map<String, Object>> tasks = (List<Map<String, Object>>) documentSnapshot.get("tasks");
+
+                        // Initialize the tasks list if it is null
+                        if (tasks == null) {
+                            tasks = new ArrayList<>();
+                        }
+
+                        tasks.add(newTask); // Add the new task
+
+                        // Update the Firestore document with the updated tasks list
+                        db.collection("taskGroups")
+                                .document(groupId)
+                                .update("tasks", tasks)
+                                .addOnSuccessListener(aVoid -> {
+                                    Toast.makeText(this, "Task added successfully", Toast.LENGTH_SHORT).show();
+                                    Intent intent = new Intent(AddTaskActivity.this, TodoActivity.class);
+                                    Intent currentIntent = getIntent();
+                                    String groupName = currentIntent.getStringExtra("TASK_GROUP_NAME");
+                                    intent.putExtra("TASK_GROUP_ID", groupId);
+                                    intent.putExtra("TASK_GROUP_NAME", groupName);
+                                    startActivity(intent);
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(this, "Failed to add task: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                });
+                    } else {
+                        Toast.makeText(this, "Task group not found", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to load task group: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 }

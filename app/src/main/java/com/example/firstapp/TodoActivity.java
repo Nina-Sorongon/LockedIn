@@ -49,6 +49,9 @@ public class TodoActivity extends AppCompatActivity {
                 Intent addtaskIntent = new Intent(TodoActivity.this, AddTaskActivity.class);
                 // Optionally pass task group ID to AddTaskActivity
                 addtaskIntent.putExtra("TASK_GROUP_ID", taskGroupId);
+
+                // passed TaskGroupName to re-render ToDoActivity after creating task.
+                addtaskIntent.putExtra("TASK_GROUP_NAME", taskGroupName);
                 startActivity(addtaskIntent);
             }
         });

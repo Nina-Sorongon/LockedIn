@@ -27,7 +27,7 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
     @Override
     public TaskGroupViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.task_group_item, parent, false);
+                .inflate(R.layout.item_task_group_card, parent, false);
         return new TaskGroupViewHolder(view);
     }
 
@@ -56,7 +56,7 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
 
         public TaskGroupViewHolder(@NonNull View itemView) {
             super(itemView);
-            groupTitle = itemView.findViewById(R.id.groupTitle); // Assuming you have a TextView with ID groupTitle
+            groupTitle = itemView.findViewById(R.id.taskGroupName); // Assuming you have a TextView with ID groupTitle
         }
     }
 }

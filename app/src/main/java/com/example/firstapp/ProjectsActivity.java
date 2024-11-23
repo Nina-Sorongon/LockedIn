@@ -120,20 +120,16 @@ public class ProjectsActivity extends AppCompatActivity {
         @NonNull
         @Override
         public TaskGroupViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            // Inflate the custom item_task_group_card layout
             View view = LayoutInflater.from(ProjectsActivity.this).inflate(R.layout.item_task_group_card, parent, false);
             return new TaskGroupViewHolder(view);
         }
 
         @Override
         public void onBindViewHolder(@NonNull TaskGroupViewHolder holder, int position) {
-            // Get the task group data
             Map<String, Object> taskGroup = taskGroups.get(position);
 
-            // Bind the task group data to the views
             holder.taskGroupName.setText(taskGroup.get("name") != null ? taskGroup.get("name").toString() : "Unnamed Group");
 
-            // Fetch and display task count from the "tasks" list in Firestore
             String groupId = taskGroup.get("id") != null ? taskGroup.get("id").toString() : "";
             if (!groupId.isEmpty()) {
                 db.collection("taskGroups")
@@ -141,12 +137,22 @@ public class ProjectsActivity extends AppCompatActivity {
                         .get()
                         .addOnSuccessListener(documentSnapshot -> {
                             if (documentSnapshot.exists()) {
-                                // Retrieve the tasks list
                                 List<Map<String, Object>> tasks = (List<Map<String, Object>>) documentSnapshot.get("tasks");
                                 if (tasks != null) {
-                                    holder.taskCount.setText(tasks.size() + " tasks");
+                                    int totalTasks = tasks.size();
+                                    int completedTasks = 0;
+
+                                    // Counter for completed tasks
+                                    for (Map<String, Object> task : tasks) {
+                                        Boolean status = (Boolean) task.get("status");
+                                        if (status != null && status) {
+                                            completedTasks++;
+                                        }
+                                    }
+
+                                    holder.taskCount.setText(completedTasks + " of " + totalTasks + " tasks completed");
                                 } else {
-                                    holder.taskCount.setText("0 tasks");
+                                    holder.taskCount.setText("No tasks");
                                 }
                             } else {
                                 holder.taskCount.setText("No tasks found");
@@ -157,6 +163,7 @@ public class ProjectsActivity extends AppCompatActivity {
                 holder.taskCount.setText("No tasks");
             }
         }
+
 
 
         @Override

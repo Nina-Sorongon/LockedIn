@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -28,32 +29,39 @@ public class LoginActivity extends AppCompatActivity {
         emailField = findViewById(R.id.email);
         passwordField = findViewById(R.id.password);
         loginBtn = findViewById(R.id.loginbtn);
+        TextView signupBtn = findViewById(R.id.signupbtn);
 
-        // If logging in from signup activity put in email of the signed up user
+        // If logging in from signup activity put in email of the signed-up user
         Intent i = getIntent();
         String signedupuseremail = i.getStringExtra("email");
-        emailField.setText(signedupuseremail);
+        if (signedupuseremail != null) {
+            emailField.setText(signedupuseremail);
+        }
 
-        loginBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String email = emailField.getText().toString().trim();
-                String password = passwordField.getText().toString().trim();
+        loginBtn.setOnClickListener(view -> {
+            String email = emailField.getText().toString().trim();
+            String password = passwordField.getText().toString().trim();
 
-                mAuth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                FirebaseUser user = mAuth.getCurrentUser();
-                                Toast.makeText(LoginActivity.this, "Login successful.", Toast.LENGTH_SHORT).show();
-                                // Redirect to projects activity or dashboard
-                                Intent i = new Intent(LoginActivity.this, ProjectsActivity.class);
-                                startActivity(i);
-                                finish();
-                            } else {
-                                Toast.makeText(LoginActivity.this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-                        });
-            }
+            mAuth.signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            Toast.makeText(LoginActivity.this, "Login successful.", Toast.LENGTH_SHORT).show();
+                            // Redirect to projects activity or dashboard
+                            Intent intent = new Intent(LoginActivity.this, ProjectsActivity.class);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            Toast.makeText(LoginActivity.this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        });
+
+        // button for signup here
+        signupBtn.setOnClickListener(view -> {
+            Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
+            startActivity(intent);
         });
     }
+
 }

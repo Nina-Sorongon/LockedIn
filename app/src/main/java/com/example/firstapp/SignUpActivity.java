@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -29,6 +30,7 @@ public class SignUpActivity extends AppCompatActivity {
         passwordField = findViewById(R.id.password);
         confirmPasswordField = findViewById(R.id.confirm_password);
         signupBtn = findViewById(R.id.signupbtn);
+        TextView loginBtn = findViewById(R.id.loginbtn);
 
         signupBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,6 +62,12 @@ public class SignUpActivity extends AppCompatActivity {
                     Toast.makeText(SignUpActivity.this, "Passwords do not match.", Toast.LENGTH_SHORT).show();
                 }
             }
+        });
+
+        // button for login here
+        loginBtn.setOnClickListener(view -> {
+            Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
+            startActivity(intent);
         });
     }
 

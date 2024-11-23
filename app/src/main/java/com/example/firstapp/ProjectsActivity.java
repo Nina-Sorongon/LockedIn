@@ -133,21 +133,31 @@ public class ProjectsActivity extends AppCompatActivity {
             // Bind the task group data to the views
             holder.taskGroupName.setText(taskGroup.get("name") != null ? taskGroup.get("name").toString() : "Unnamed Group");
 
-            // Fetch and display task count
+            // Fetch and display task count from the "tasks" list in Firestore
             String groupId = taskGroup.get("id") != null ? taskGroup.get("id").toString() : "";
             if (!groupId.isEmpty()) {
-                db.collection("tasks")
-                        .whereEqualTo("groupId", groupId)
+                db.collection("taskGroups")
+                        .document(groupId)
                         .get()
-                        .addOnSuccessListener(queryDocumentSnapshots -> {
-                            int taskCount = queryDocumentSnapshots.size();
-                            holder.taskCount.setText(taskCount + " tasks");
+                        .addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                // Retrieve the tasks list
+                                List<Map<String, Object>> tasks = (List<Map<String, Object>>) documentSnapshot.get("tasks");
+                                if (tasks != null) {
+                                    holder.taskCount.setText(tasks.size() + " tasks");
+                                } else {
+                                    holder.taskCount.setText("0 tasks");
+                                }
+                            } else {
+                                holder.taskCount.setText("No tasks found");
+                            }
                         })
                         .addOnFailureListener(e -> holder.taskCount.setText("Error loading tasks"));
             } else {
                 holder.taskCount.setText("No tasks");
             }
         }
+
 
         @Override
         public int getItemCount() {

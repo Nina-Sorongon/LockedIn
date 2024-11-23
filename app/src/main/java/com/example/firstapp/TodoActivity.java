@@ -37,16 +37,18 @@ public class TodoActivity extends AppCompatActivity {
         taskGroupNameTextView = findViewById(R.id.taskGroupNameTextView);
         taskRecyclerView = findViewById(R.id.taskRecyclerView);
 
-        // Set up RecyclerView
-        tasks = new ArrayList<>();
-        taskAdapter = new TaskAdapter(tasks);
-        taskRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        taskRecyclerView.setAdapter(taskAdapter);
-
         // Get data from Intent
         Intent intent = getIntent();
         String taskGroupId = intent.getStringExtra("TASK_GROUP_ID");
         String taskGroupName = intent.getStringExtra("TASK_GROUP_NAME");
+
+        // Set up RecyclerView
+        tasks = new ArrayList<>();
+        taskAdapter = new TaskAdapter(tasks, taskGroupId);
+        taskRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        taskRecyclerView.setAdapter(taskAdapter);
+
+
 
         // Set task group name in TextView
         if (taskGroupName != null) {

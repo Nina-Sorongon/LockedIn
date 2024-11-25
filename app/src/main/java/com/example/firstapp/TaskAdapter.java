@@ -58,11 +58,17 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         }
 
         boolean status = task.get("status") != null && (boolean) task.get("status");
+
+        // Remove existing listener to prevent triggering during programmatic updates
+        holder.checkbox.setOnCheckedChangeListener(null);
+
+        // Update checkbox state
         holder.checkbox.setChecked(status);
 
+        // Reattach listener for user interactions
         holder.checkbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             task.put("status", isChecked);
-            updateTaskInFirestore(position, task);
+            updateTaskInFirestore(task); // Corrected method call
         });
 
         // Edit button functionality
@@ -74,28 +80,27 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                     .setTitle("Confirm Delete")
                     .setMessage("Are you sure you want to delete this task?")
                     .setPositiveButton("Delete", (dialog, which) -> {
-                        deleteTaskFromFirestore(position); // Delete from Firestore
+                        String taskId = (String) tasks.get(position).get("id"); // Retrieve task ID
+                        deleteTaskFromFirestore(taskId); // Pass the task ID
                     })
                     .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                     .show();
         });
-
     }
 
-    private void deleteTaskFromFirestore(int taskIndex) {
+
+    private void deleteTaskFromFirestore(String taskId) {
         db.collection("taskGroups").document(taskGroupId).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         List<Map<String, Object>> taskList = (List<Map<String, Object>>) documentSnapshot.get("tasks");
-                        if (taskList != null && taskIndex < taskList.size()) {
-                            taskList.remove(taskIndex);
+                        if (taskList != null) {
+                            taskList.removeIf(task -> taskId.equals(task.get("id")));
 
                             db.collection("taskGroups").document(taskGroupId)
                                     .update("tasks", taskList)
                                     .addOnSuccessListener(aVoid -> {
-                                        Log.d("TaskAdapter", "Task deleted successfully.");
-                                        tasks.clear();
-                                        tasks.addAll(taskList);
+                                        tasks.removeIf(task -> taskId.equals(task.get("id")));
                                         notifyDataSetChanged();
                                     })
                                     .addOnFailureListener(e -> Log.e("TaskAdapter", "Failed to delete task.", e));
@@ -104,6 +109,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 })
                 .addOnFailureListener(e -> Log.e("TaskAdapter", "Failed to fetch task group.", e));
     }
+
 
 
     @Override
@@ -124,7 +130,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             String newTitle = input.getText().toString().trim();
             if (!newTitle.isEmpty()) {
                 tasks.get(taskIndex).put("title", newTitle);
-                updateTaskInFirestore(taskIndex, tasks.get(taskIndex));
+                updateTaskInFirestore(tasks.get(taskIndex)); // Corrected method call
                 titleView.setText(newTitle);
             }
         });
@@ -134,13 +140,20 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
 
-    private void updateTaskInFirestore(int taskIndex, Map<String, Object> updatedTask) {
+    private void updateTaskInFirestore(Map<String, Object> updatedTask) {
+        String taskId = (String) updatedTask.get("id");
         db.collection("taskGroups").document(taskGroupId).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         List<Map<String, Object>> taskList = (List<Map<String, Object>>) documentSnapshot.get("tasks");
-                        if (taskList != null && taskIndex < taskList.size()) {
-                            taskList.set(taskIndex, updatedTask);
+                        if (taskList != null) {
+                            for (int i = 0; i < taskList.size(); i++) {
+                                Map<String, Object> task = taskList.get(i);
+                                if (taskId.equals(task.get("id"))) {
+                                    taskList.set(i, updatedTask);
+                                    break;
+                                }
+                            }
 
                             db.collection("taskGroups").document(taskGroupId)
                                     .update("tasks", taskList)
@@ -151,6 +164,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 })
                 .addOnFailureListener(e -> Log.e("TaskAdapter", "Failed to fetch task group.", e));
     }
+
 
     public void updateTaskList(List<Map<String, Object>> newTasks) {
         tasks.clear();

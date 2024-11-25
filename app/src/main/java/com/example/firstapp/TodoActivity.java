@@ -127,14 +127,13 @@ public class TodoActivity extends AppCompatActivity {
     }
 
     private void applyFilter(String filter) {
-        filteredTasks.clear(); // Clear the filtered list
+        filteredTasks.clear();
 
         if ("All".equals(filter)) {
-            filteredTasks.addAll(tasks); // Show all tasks
+            filteredTasks.addAll(tasks);
         } else {
             for (Map<String, Object> task : tasks) {
                 boolean status = task.get("status") != null && (boolean) task.get("status");
-
                 if ("Ongoing".equals(filter) && !status) {
                     filteredTasks.add(task);
                 } else if ("Completed".equals(filter) && status) {
@@ -143,12 +142,10 @@ public class TodoActivity extends AppCompatActivity {
             }
         }
 
-        // Sort the filtered tasks
         sortTasksByDeadline(filteredTasks);
-
-        // Update the adapter with the filtered tasks
-        taskAdapter.updateTaskList(filteredTasks);
+        taskAdapter.updateTaskList(new ArrayList<>(filteredTasks)); // Pass a new instance
     }
+
 
     private void sortTasksByDeadline(List<Map<String, Object>> taskList) {
         Collections.sort(taskList, new Comparator<Map<String, Object>>() {

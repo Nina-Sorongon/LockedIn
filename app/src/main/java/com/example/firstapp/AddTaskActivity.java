@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class AddTaskActivity extends AppCompatActivity {
     private ImageButton exitBtn;
@@ -86,25 +87,24 @@ public class AddTaskActivity extends AppCompatActivity {
     private void addTaskToGroup(String groupId, Map<String, Object> newTask) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+        // Generate a unique ID for the task
+        String taskId = UUID.randomUUID().toString();
+        newTask.put("id", taskId);
+
         db.collection("taskGroups")
                 .document(groupId)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        // Fetch tasks and ensure they are stored as a List
                         List<Map<String, Object>> tasks = (List<Map<String, Object>>) documentSnapshot.get("tasks");
-
-                        // Initialize the tasks list if null and ensure it is mutable
                         if (tasks == null) {
                             tasks = new ArrayList<>();
                         } else {
-                            tasks = new ArrayList<>(tasks); // Create a mutable copy
+                            tasks = new ArrayList<>(tasks);
                         }
 
-                        // Add the new task
                         tasks.add(newTask);
 
-                        // Update Firestore document with the modified tasks list
                         db.collection("taskGroups")
                                 .document(groupId)
                                 .update("tasks", tasks)
@@ -128,5 +128,6 @@ public class AddTaskActivity extends AppCompatActivity {
                     Toast.makeText(this, "Failed to load task group: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
+
 
 }

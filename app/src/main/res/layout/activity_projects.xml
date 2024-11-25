@@ -43,6 +43,8 @@
                 app:layout_constraintBottom_toTopOf="@id/taskGroupsRecyclerView"
                 app:srcCompat="@drawable/logodarkgrey" />
 
+            
+
             <!-- Task Groups RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/taskGroupsRecyclerView"

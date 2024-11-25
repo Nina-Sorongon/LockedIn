@@ -91,24 +91,27 @@ public class AddTaskActivity extends AppCompatActivity {
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
+                        // Fetch tasks and ensure they are stored as a List
                         List<Map<String, Object>> tasks = (List<Map<String, Object>>) documentSnapshot.get("tasks");
 
-                        // Initialize the tasks list if it is null
+                        // Initialize the tasks list if null and ensure it is mutable
                         if (tasks == null) {
                             tasks = new ArrayList<>();
+                        } else {
+                            tasks = new ArrayList<>(tasks); // Create a mutable copy
                         }
 
-                        tasks.add(newTask); // Add the new task
+                        // Add the new task
+                        tasks.add(newTask);
 
-                        // Update the Firestore document with the updated tasks list
+                        // Update Firestore document with the modified tasks list
                         db.collection("taskGroups")
                                 .document(groupId)
                                 .update("tasks", tasks)
                                 .addOnSuccessListener(aVoid -> {
                                     Toast.makeText(this, "Task added successfully", Toast.LENGTH_SHORT).show();
                                     Intent intent = new Intent(AddTaskActivity.this, TodoActivity.class);
-                                    Intent currentIntent = getIntent();
-                                    String groupName = currentIntent.getStringExtra("TASK_GROUP_NAME");
+                                    String groupName = getIntent().getStringExtra("TASK_GROUP_NAME");
                                     intent.putExtra("TASK_GROUP_ID", groupId);
                                     intent.putExtra("TASK_GROUP_NAME", groupName);
                                     startActivity(intent);
@@ -125,4 +128,5 @@ public class AddTaskActivity extends AppCompatActivity {
                     Toast.makeText(this, "Failed to load task group: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
+
 }

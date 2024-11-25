@@ -9,13 +9,11 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +28,6 @@ public class TodoActivity extends AppCompatActivity {
     private RecyclerView taskRecyclerView;
     private TaskAdapter taskAdapter;
     private List<Map<String, Object>> tasks;
-
     private List<Map<String, Object>> filteredTasks = new ArrayList<>();
     private boolean isFilterSpinnerInitialized = false;
 
@@ -62,9 +59,9 @@ public class TodoActivity extends AppCompatActivity {
             taskGroupNameTextView.setText(taskGroupName);
         }
 
-        // Load tasks from Firestore
+        // Load tasks from Firestore with default "All" filter
         if (taskGroupId != null) {
-            loadTasksFromFirestore(taskGroupId);
+            loadTasksFromFirestore(taskGroupId, "All");
         } else {
             Toast.makeText(this, "Task group not found", Toast.LENGTH_SHORT).show();
         }
@@ -83,13 +80,14 @@ public class TodoActivity extends AppCompatActivity {
             startActivity(addtaskIntent);
         });
 
-        // Handle dropdown selection
+        // Handle dropdown selection for filtering
         filterDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (isFilterSpinnerInitialized) {
                     String selectedFilter = parent.getItemAtPosition(position).toString();
-                    filterTasks(selectedFilter);
+                    // Reload tasks with the selected filter
+                    loadTasksFromFirestore(taskGroupId, selectedFilter);
                 } else {
                     isFilterSpinnerInitialized = true; // Ignore the initial selection
                 }
@@ -97,13 +95,13 @@ public class TodoActivity extends AppCompatActivity {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                // Default to show all tasks
-                filterTasks("All");
+                // Default to "All" filter
+                loadTasksFromFirestore(taskGroupId, "All");
             }
         });
     }
 
-    private void loadTasksFromFirestore(String taskGroupId) {
+    private void loadTasksFromFirestore(String taskGroupId, String filter) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         db.collection("taskGroups")
@@ -111,13 +109,16 @@ public class TodoActivity extends AppCompatActivity {
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        tasks.clear();
+                        tasks.clear(); // Clear existing tasks
                         List<Map<String, Object>> taskList = (List<Map<String, Object>>) documentSnapshot.get("tasks");
                         if (taskList != null) {
-                            tasks.addAll(taskList);
+                            tasks.addAll(taskList); // Populate tasks
                         }
-                        sortTasksByDeadline(tasks);
-                        filterTasks("All");
+
+                        sortTasksByDeadline(tasks); // Sort tasks by deadline
+
+                        // Apply the selected filter
+                        applyFilter(filter);
                     } else {
                         Toast.makeText(this, "Task group document does not exist", Toast.LENGTH_SHORT).show();
                     }
@@ -125,37 +126,28 @@ public class TodoActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> Toast.makeText(this, "Failed to load tasks: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
-    private void filterTasks(String filter) {
-        filteredTasks.clear();
+    private void applyFilter(String filter) {
+        filteredTasks.clear(); // Clear the filtered list
 
-        for (Map<String, Object> task : tasks) {
-            boolean status = task.get("status") != null && (boolean) task.get("status");
+        if ("All".equals(filter)) {
+            filteredTasks.addAll(tasks); // Show all tasks
+        } else {
+            for (Map<String, Object> task : tasks) {
+                boolean status = task.get("status") != null && (boolean) task.get("status");
 
-            if ("All".equals(filter)) {
-                filteredTasks.add(task);
-            } else if ("Ongoing".equals(filter) && !status) {
-                filteredTasks.add(task);
-            } else if ("Completed".equals(filter) && status) {
-                filteredTasks.add(task);
+                if ("Ongoing".equals(filter) && !status) {
+                    filteredTasks.add(task);
+                } else if ("Completed".equals(filter) && status) {
+                    filteredTasks.add(task);
+                }
             }
         }
 
         // Sort the filtered tasks
         sortTasksByDeadline(filteredTasks);
 
-        // Update the adapter
+        // Update the adapter with the filtered tasks
         taskAdapter.updateTaskList(filteredTasks);
-    }
-
-    private void sortTasksByDeadline() {
-        Collections.sort(tasks, new Comparator<Map<String, Object>>() {
-            @Override
-            public int compare(Map<String, Object> task1, Map<String, Object> task2) {
-                long deadline1 = (long) task1.get("deadline");
-                long deadline2 = (long) task2.get("deadline");
-                return Long.compare(deadline1, deadline2);
-            }
-        });
     }
 
     private void sortTasksByDeadline(List<Map<String, Object>> taskList) {

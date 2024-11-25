@@ -19,7 +19,6 @@ import java.util.Map;
 
 public class AddNewGroupActivity extends AppCompatActivity {
     private EditText groupNameInput;
-    private Spinner imageSpinner;
     private Button createGroupButton;
 
     private FirebaseFirestore db;
@@ -31,15 +30,10 @@ public class AddNewGroupActivity extends AppCompatActivity {
         setContentView(R.layout.activity_addnewgroup);
 
         groupNameInput = findViewById(R.id.edittitle);
-        imageSpinner = findViewById(R.id.imageSpinner);
         createGroupButton = findViewById(R.id.creategroupbtn);
 
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
-
-
-
-
         createGroupButton.setOnClickListener(view -> createTaskGroup());
     }
 

@@ -69,18 +69,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
         // Delete button functionality
         holder.deleteButton.setOnClickListener(view -> {
-            // Show a confirmation dialog before deleting
             new MaterialAlertDialogBuilder(context)
                     .setTitle("Confirm Delete")
                     .setMessage("Are you sure you want to delete this task?")
                     .setPositiveButton("Delete", (dialog, which) -> {
-                        tasks.remove(position); // Remove the task locally
-                        deleteTaskFromFirestore(position); // Delete the task from Firestore
-                        notifyItemRemoved(position); // Notify the adapter
+                        deleteTaskFromFirestore(position); // Delete from Firestore
                     })
                     .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                     .show();
         });
+
     }
 
     private void deleteTaskFromFirestore(int taskIndex) {
@@ -93,13 +91,19 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
                             db.collection("taskGroups").document(taskGroupId)
                                     .update("tasks", taskList)
-                                    .addOnSuccessListener(aVoid -> Log.d("TaskAdapter", "Task deleted successfully."))
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d("TaskAdapter", "Task deleted successfully.");
+                                        tasks.clear();
+                                        tasks.addAll(taskList);
+                                        notifyDataSetChanged();
+                                    })
                                     .addOnFailureListener(e -> Log.e("TaskAdapter", "Failed to delete task.", e));
                         }
                     }
                 })
                 .addOnFailureListener(e -> Log.e("TaskAdapter", "Failed to fetch task group.", e));
     }
+
 
     @Override
     public int getItemCount() {

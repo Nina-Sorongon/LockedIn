@@ -112,6 +112,7 @@ public class AddTaskActivity extends AppCompatActivity {
                                     intent.putExtra("TASK_GROUP_ID", groupId);
                                     intent.putExtra("TASK_GROUP_NAME", groupName);
                                     startActivity(intent);
+                                    finish();
                                 })
                                 .addOnFailureListener(e -> {
                                     Toast.makeText(this, "Failed to add task: " + e.getMessage(), Toast.LENGTH_SHORT).show();

@@ -44,7 +44,7 @@ public class TodoActivity extends AppCompatActivity {
 
         // Set up RecyclerView
         tasks = new ArrayList<>();
-        taskAdapter = new TaskAdapter(tasks, taskGroupId);
+        taskAdapter = new TaskAdapter(tasks, taskGroupId, this);
         taskRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         taskRecyclerView.setAdapter(taskAdapter);
 

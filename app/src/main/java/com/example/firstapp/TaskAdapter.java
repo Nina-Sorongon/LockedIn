@@ -1,6 +1,7 @@
 package com.example.firstapp;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.text.InputType;
 import android.util.Log;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -19,6 +21,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -119,24 +122,82 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     private void showEditDialog(int taskIndex, TextView titleView) {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
-        builder.setTitle("Edit Task Title");
+        builder.setTitle("Edit Task");
 
-        EditText input = new EditText(context);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        input.setText(titleView.getText().toString());
-        builder.setView(input);
+        // Container for title input and deadline selection
+        LinearLayout container = new LinearLayout(context);
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.setPadding(20, 20, 20, 20);
 
+        // Input field for task title
+        EditText inputTitle = new EditText(context);
+        inputTitle.setInputType(InputType.TYPE_CLASS_TEXT);
+        inputTitle.setText(titleView.getText().toString());
+        inputTitle.setHint("Task Title");
+        container.addView(inputTitle);
+
+        // TextView for deadline
+        TextView deadlineView = new TextView(context);
+        long currentDeadline = tasks.get(taskIndex).get("deadline") != null ? (long) tasks.get(taskIndex).get("deadline") : 0;
+
+        String formattedDeadline = currentDeadline > 0 ? new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(currentDeadline) : "No deadline set";
+        deadlineView.setText("Due: " + formattedDeadline);
+        deadlineView.setPadding(0, 20, 0, 0);
+        container.addView(deadlineView);
+
+        // Open date picker when the deadline is clicked
+        deadlineView.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            if (currentDeadline > 0) {
+                calendar.setTimeInMillis(currentDeadline);
+            }
+
+            new DatePickerDialog(context, (view, year, month, dayOfMonth) -> {
+                calendar.set(year, month, dayOfMonth);
+                String selectedDate = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(calendar.getTime());
+                deadlineView.setText("Due: " + selectedDate);
+                tasks.get(taskIndex).put("deadline", calendar.getTimeInMillis());
+            }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show();
+        });
+
+        builder.setView(container);
+
+        // Save button
         builder.setPositiveButton("Save", (dialog, which) -> {
-            String newTitle = input.getText().toString().trim();
-            if (!newTitle.isEmpty()) {
+            String newTitle = inputTitle.getText().toString().trim();
+            boolean hasChanges = false;
+
+            // Check if the title has changed
+            if (!newTitle.isEmpty() && !newTitle.equals(tasks.get(taskIndex).get("title"))) {
                 tasks.get(taskIndex).put("title", newTitle);
-                updateTaskInFirestore(tasks.get(taskIndex)); // Corrected method call
                 titleView.setText(newTitle);
+                hasChanges = true;
+            }
+
+            // Check if the deadline has changed
+            long newDeadline = (long) tasks.get(taskIndex).get("deadline");
+            if (newDeadline != currentDeadline) {
+                hasChanges = true;
+            }
+
+            if (hasChanges) {
+                updateTaskInFirestore(tasks.get(taskIndex));
+                sortTasksByDeadline();
+                notifyDataSetChanged();
             }
         });
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
 
         builder.show();
+    }
+
+    private void sortTasksByDeadline() {
+        tasks.sort((task1, task2) -> {
+            long deadline1 = task1.get("deadline") != null ? (long) task1.get("deadline") : Long.MAX_VALUE;
+            long deadline2 = task2.get("deadline") != null ? (long) task2.get("deadline") : Long.MAX_VALUE;
+            return Long.compare(deadline1, deadline2);
+        });
     }
 
 

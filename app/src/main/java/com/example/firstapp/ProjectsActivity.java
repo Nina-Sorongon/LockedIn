@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,6 +33,8 @@ public class ProjectsActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private ActivityResultLauncher<Intent> addGroupLauncher;
+    private TextView noTaskGroupText;
+    private ImageView noTaskGroupIcon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,9 +54,12 @@ public class ProjectsActivity extends AppCompatActivity {
         // Initialize Firestore
         db = FirebaseFirestore.getInstance();
 
-        // Initialize RecyclerView
+        // Initialize RecyclerView and TextView
         taskGroupsRecyclerView = findViewById(R.id.taskGroupsRecyclerView);
         taskGroupsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        noTaskGroupText = findViewById(R.id.noTaskGroupMessage); // Initialize the TextView
+        noTaskGroupIcon = findViewById(R.id.noTaskGroupIcon);
 
         taskGroups = new ArrayList<>();
         taskGroupsRecyclerView.setAdapter(new TaskGroupAdapter());
@@ -101,14 +107,27 @@ public class ProjectsActivity extends AppCompatActivity {
                         taskGroup.put("id", document.getId()); // Ensure each task group has a unique ID
                         taskGroups.add(taskGroup);
                     }
+
                     // Notify the RecyclerView adapter of data changes
                     taskGroupsRecyclerView.getAdapter().notifyDataSetChanged();
+
+                    // Update visibility of the no task group message
+                    if (taskGroups.isEmpty()) {
+                        noTaskGroupText.setVisibility(View.VISIBLE);
+                        noTaskGroupIcon.setVisibility(View.VISIBLE);
+                        taskGroupsRecyclerView.setVisibility(View.GONE);
+                    } else {
+                        noTaskGroupText.setVisibility(View.GONE);
+                        noTaskGroupIcon.setVisibility(View.GONE);
+                    }
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Failed to load task groups: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     Log.e("ProjectsActivity", "Error fetching task groups", e);
                 });
     }
+
+
 
     private void refreshTaskGroups() {
         fetchTaskGroups(); // Refresh data by fetching from Firestore again

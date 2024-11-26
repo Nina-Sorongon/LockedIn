@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#f9fdfd"
-    tools:context=".AddTodoActivity">
+    tools:context=".AddTaskActivity">
 
     <ImageButton
         android:id="@+id/exitbtn"
@@ -139,49 +139,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/duetodaybtn"
         app:srcCompat="@drawable/calendarbtn" />
-
-    <TextView
-        android:id="@+id/group"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="32dp"
-        android:background="@null"
-        android:fontFamily="@font/poppins_bold"
-        android:text="GROUP"
-        android:textAllCaps="true"
-        android:textColor="#606060"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.009"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/calendarbtn" />
-
-    <ImageButton
-        android:id="@+id/dailytasksbtn"
-        android:layout_width="156dp"
-        android:layout_height="62dp"
-        android:layout_marginEnd="8dp"
-        android:background="@null"
-        android:scaleType="centerCrop"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.135"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/group"
-        app:srcCompat="@drawable/dailytasksbtn" />
-
-    <ImageButton
-        android:id="@+id/grocerylistbtn"
-        android:layout_width="156dp"
-        android:layout_height="62dp"
-        android:background="@null"
-        android:scaleType="centerCrop"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.8"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/group"
-        app:srcCompat="@drawable/grocerylistbtn" />
 
     <Button
         android:id="@+id/createtodobtn"

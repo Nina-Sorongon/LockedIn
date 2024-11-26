@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Calendar;
 
 public class AddTaskActivity extends AppCompatActivity {
     private ImageButton exitBtn;
@@ -24,6 +25,7 @@ public class AddTaskActivity extends AppCompatActivity {
     private ImageButton calendarBtn;
     private long selectedDeadline = 0;
     private String taskGroupId;
+    private String taskGroupName;
     private EditText taskTitle;
 
     @Override
@@ -36,9 +38,12 @@ public class AddTaskActivity extends AppCompatActivity {
         createBtn = findViewById(R.id.createtodobtn);
         calendarBtn = findViewById(R.id.calendarbtn);
         taskTitle = findViewById(R.id.edittitle);
+        ImageButton dueTodayBtn = findViewById(R.id.duetodaybtn);
+        ImageButton dueTomorrowBtn = findViewById(R.id.duetomorrowbtn);
 
         // Get the task group ID from Intent
         taskGroupId = getIntent().getStringExtra("TASK_GROUP_ID");
+        taskGroupName = getIntent().getStringExtra("TASK_GROUP_NAME");
         if (taskGroupId == null || taskGroupId.isEmpty()) {
             Toast.makeText(this, "Task group not found", Toast.LENGTH_SHORT).show();
             finish();
@@ -59,10 +64,26 @@ public class AddTaskActivity extends AppCompatActivity {
             });
         });
 
+        // Set due date to today
+        dueTodayBtn.setOnClickListener(view -> {
+            Calendar calendar = Calendar.getInstance();
+            selectedDeadline = calendar.getTimeInMillis(); // Get today's date in milliseconds
+            Toast.makeText(this, "Due date set to today", Toast.LENGTH_SHORT).show();
+        });
+
+        // Set due date to tomorrow
+        dueTomorrowBtn.setOnClickListener(view -> {
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_YEAR, 1); // Add one day to the current date
+            selectedDeadline = calendar.getTimeInMillis(); // Get tomorrow's date in milliseconds
+            Toast.makeText(this, "Due date set to tomorrow", Toast.LENGTH_SHORT).show();
+        });
+
         // Exit button setup
         exitBtn.setOnClickListener(view -> {
             Intent exitIntent = new Intent(AddTaskActivity.this, TodoActivity.class);
-            exitIntent.putExtra("taskGroupId", taskGroupId); // Pass back the task group ID
+            exitIntent.putExtra("TASK_GROUP_ID", taskGroupId); // Pass back the task group ID
+            exitIntent.putExtra("TASK_GROUP_NAME", taskGroupName);
             startActivity(exitIntent);
         });
 

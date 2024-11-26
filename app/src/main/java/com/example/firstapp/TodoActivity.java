@@ -1,6 +1,7 @@
 package com.example.firstapp;
 
 import android.content.Intent;
+import android.media.Image;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -9,6 +10,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -42,6 +44,7 @@ public class TodoActivity extends AppCompatActivity {
         taskGroupNameTextView = findViewById(R.id.taskGroupNameTextView);
         taskRecyclerView = findViewById(R.id.taskRecyclerView);
         Spinner filterDropdown = findViewById(R.id.filterDropdown);
+        ImageButton deleteTaskGroupBtn = findViewById(R.id.deleteTaskGroupBtn);
 
         // Get data from Intent
         Intent intent = getIntent();
@@ -78,6 +81,15 @@ public class TodoActivity extends AppCompatActivity {
             addtaskIntent.putExtra("TASK_GROUP_ID", taskGroupId);
             addtaskIntent.putExtra("TASK_GROUP_NAME", taskGroupName);
             startActivity(addtaskIntent);
+        });
+
+        // Handle delete task group button click
+        deleteTaskGroupBtn.setOnClickListener(view -> {
+            if (taskGroupId != null) {
+                showConfirmationDialog(taskGroupId);
+            } else {
+                Toast.makeText(this, "No task group to delete", Toast.LENGTH_SHORT).show();
+            }
         });
 
         // Handle dropdown selection for filtering
@@ -126,6 +138,25 @@ public class TodoActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> Toast.makeText(this, "Failed to load tasks: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
+    private void deleteTaskGroup(String taskGroupId) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        // Delete the task group document from Firestore
+        db.collection("taskGroups")
+                .document(taskGroupId)
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    // Task group deleted successfully, navigate back to ProjectsActivity
+                    Toast.makeText(this, "Task group deleted", Toast.LENGTH_SHORT).show();
+                    Intent backIntent = new Intent(TodoActivity.this, ProjectsActivity.class);
+                    startActivity(backIntent);
+                })
+                .addOnFailureListener(e -> {
+                    // If deletion fails, show an error message
+                    Toast.makeText(this, "Failed to delete task group: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
     private void applyFilter(String filter) {
         filteredTasks.clear();
 
@@ -145,6 +176,23 @@ public class TodoActivity extends AppCompatActivity {
         sortTasksByDeadline(filteredTasks);
         taskAdapter.updateTaskList(new ArrayList<>(filteredTasks)); // Pass a new instance
     }
+
+    private void showConfirmationDialog(final String taskGroupId) {
+        new AlertDialog.Builder(this)
+                .setTitle("Are you sure?")
+                .setMessage("This action will permanently delete the task group and all its tasks. Are you sure you want to proceed?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    // User confirmed, proceed to delete
+                    deleteTaskGroup(taskGroupId);
+                })
+                .setNegativeButton("No", (dialog, which) -> {
+                    // User canceled, just dismiss the dialog
+                    dialog.dismiss();
+                })
+                .setCancelable(false) // Prevent dismissing the dialog by clicking outside
+                .show();
+    }
+
 
 
     private void sortTasksByDeadline(List<Map<String, Object>> taskList) {

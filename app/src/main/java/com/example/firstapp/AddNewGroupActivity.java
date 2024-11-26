@@ -1,10 +1,12 @@
 package com.example.firstapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -20,6 +22,7 @@ import java.util.Map;
 public class AddNewGroupActivity extends AppCompatActivity {
     private EditText groupNameInput;
     private Button createGroupButton;
+    private ImageButton exitBtn;
 
     private FirebaseFirestore db;
     private FirebaseAuth auth;
@@ -31,11 +34,21 @@ public class AddNewGroupActivity extends AppCompatActivity {
 
         groupNameInput = findViewById(R.id.edittitle);
         createGroupButton = findViewById(R.id.creategroupbtn);
+        exitBtn = findViewById(R.id.exitbtn);
+
 
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
         createGroupButton.setOnClickListener(view -> createTaskGroup());
+
+        // Exit button setup
+        exitBtn.setOnClickListener(view -> {
+            Intent exitIntent = new Intent(AddNewGroupActivity.this, ProjectsActivity.class);
+            startActivity(exitIntent);
+        });
     }
+
+
 
     private void createTaskGroup() {
         String groupName = groupNameInput.getText().toString().trim();

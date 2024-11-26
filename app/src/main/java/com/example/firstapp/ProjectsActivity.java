@@ -128,6 +128,7 @@ public class ProjectsActivity extends AppCompatActivity {
     }
 
 
+
     private void refreshTaskGroups() {
         fetchTaskGroups(); // Refresh data by fetching from Firestore again
     }

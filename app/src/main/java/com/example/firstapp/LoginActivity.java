@@ -42,20 +42,38 @@ public class LoginActivity extends AppCompatActivity {
             String email = emailField.getText().toString().trim();
             String password = passwordField.getText().toString().trim();
 
-            mAuth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            Toast.makeText(LoginActivity.this, "Login successful.", Toast.LENGTH_SHORT).show();
-                            // Redirect to projects activity or dashboard
-                            Intent intent = new Intent(LoginActivity.this, ProjectsActivity.class);
-                            startActivity(intent);
-                            finish();
-                        } else {
-                            Toast.makeText(LoginActivity.this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    });
+            try {
+                // Validate input
+                if (email.isEmpty()) {
+                    throw new IllegalArgumentException("Email field cannot be empty.");
+                }
+                if (password.isEmpty()) {
+                    throw new IllegalArgumentException("Password field cannot be empty.");
+                }
+
+                mAuth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                FirebaseUser user = mAuth.getCurrentUser();
+                                Toast.makeText(LoginActivity.this, "Login successful.", Toast.LENGTH_SHORT).show();
+                                // Redirect to projects activity or dashboard
+                                Intent intent = new Intent(LoginActivity.this, ProjectsActivity.class);
+                                startActivity(intent);
+                                finish();
+                            } else {
+                                Toast.makeText(LoginActivity.this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            } catch (IllegalArgumentException e) {
+                // Handle empty email or password
+                Toast.makeText(LoginActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                // Catch any other unexpected exceptions
+                Log.e("LoginActivity", "Unexpected error during login", e);
+                Toast.makeText(LoginActivity.this, "An unexpected error occurred. Please try again.", Toast.LENGTH_SHORT).show();
+            }
         });
+
 
         // button for signup here
         signupBtn.setOnClickListener(view -> {

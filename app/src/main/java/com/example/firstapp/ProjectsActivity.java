@@ -85,33 +85,33 @@ public class ProjectsActivity extends AppCompatActivity {
 
     private void fetchTaskGroups() {
         taskGroups.clear();
-
-        // Get the currently authenticated user's ID
         String userId = auth.getCurrentUser().getUid();
 
-        // Query Firestore to fetch task groups
         db.collection("taskGroups")
                 .whereEqualTo("userId", userId)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         Map<String, Object> taskGroup = document.getData();
-                        taskGroup.put("id", document.getId()); // Ensure each task group has a unique ID
+                        taskGroup.put("id", document.getId());
+
+                        // Fetch tasks within the same query
+                        List<Map<String, Object>> tasks = (List<Map<String, Object>>) document.get("tasks");
+                        if (tasks != null) {
+                            taskGroup.put("totalTasks", tasks.size());
+                            taskGroup.put("completedTasks", (int) tasks.stream()
+                                    .filter(task -> Boolean.TRUE.equals(task.get("status")))
+                                    .count());
+                        } else {
+                            taskGroup.put("totalTasks", 0);
+                            taskGroup.put("completedTasks", 0);
+                        }
+
                         taskGroups.add(taskGroup);
                     }
 
-                    // Notify the RecyclerView adapter of data changes
                     taskGroupsRecyclerView.getAdapter().notifyDataSetChanged();
-
-                    // Update visibility of the no task group message
-                    if (taskGroups.isEmpty()) {
-                        noTaskGroupText.setVisibility(View.VISIBLE);
-                        noTaskGroupIcon.setVisibility(View.VISIBLE);
-                        taskGroupsRecyclerView.setVisibility(View.GONE);
-                    } else {
-                        noTaskGroupText.setVisibility(View.GONE);
-                        noTaskGroupIcon.setVisibility(View.GONE);
-                    }
+                    updateNoTaskGroupMessage();
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Failed to load task groups: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -119,11 +119,17 @@ public class ProjectsActivity extends AppCompatActivity {
                 });
     }
 
-
-
-    private void refreshTaskGroups() {
-        fetchTaskGroups(); // Refresh data by fetching from Firestore again
+    private void updateNoTaskGroupMessage() {
+        if (taskGroups.isEmpty()) {
+            noTaskGroupText.setVisibility(View.VISIBLE);
+            noTaskGroupIcon.setVisibility(View.VISIBLE);
+            taskGroupsRecyclerView.setVisibility(View.GONE);
+        } else {
+            noTaskGroupText.setVisibility(View.GONE);
+            noTaskGroupIcon.setVisibility(View.GONE);
+        }
     }
+
 
     // Inner class for RecyclerView Adapter
     private class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.TaskGroupViewHolder> {

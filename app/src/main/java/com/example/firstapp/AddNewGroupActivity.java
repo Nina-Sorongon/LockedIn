@@ -79,6 +79,8 @@ public class AddNewGroupActivity extends AppCompatActivity {
                 .addOnSuccessListener(documentReference -> {
                     Toast.makeText(this, "Task group created!", Toast.LENGTH_SHORT).show();
                     setResult(RESULT_OK);
+                    Intent i = new Intent(AddNewGroupActivity.this, ProjectsActivity.class);
+                    startActivity(i);
                     finish();
                 })
                 .addOnFailureListener(e -> {

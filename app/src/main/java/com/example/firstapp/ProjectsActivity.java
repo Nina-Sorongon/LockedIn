@@ -32,7 +32,6 @@ public class ProjectsActivity extends AppCompatActivity {
     private List<Map<String, Object>> taskGroups;
     private FirebaseFirestore db;
     private FirebaseAuth auth;
-    private ActivityResultLauncher<Intent> addGroupLauncher;
     private TextView noTaskGroupText;
     private ImageView noTaskGroupIcon;
 
@@ -69,19 +68,12 @@ public class ProjectsActivity extends AppCompatActivity {
 
         // Initialize "Add New Group" button with ActivityResultLauncher
         ImageButton newProjectBtn = findViewById(R.id.newprojectbtn);
-        addGroupLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK) {
-                        refreshTaskGroups();
-                    }
-                }
-        );
 
         newProjectBtn.setOnClickListener(view -> {
             Intent intent = new Intent(this, AddNewGroupActivity.class);
-            addGroupLauncher.launch(intent);
+            startActivity(intent);
         });
+
 
         ImageButton userButton = findViewById(R.id.user);
         userButton.setOnClickListener(view -> {

@@ -13,12 +13,17 @@ import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.Calendar;
 
+/**
+ * Activity for adding a new task to a task group.
+ * This activity allows users to set task details such as title and deadline,
+ * and save them to a Firestore collection associated with a task group.
+ */
 public class AddTaskActivity extends AppCompatActivity {
     private ImageButton exitBtn;
     private Button createBtn;
@@ -28,12 +33,17 @@ public class AddTaskActivity extends AppCompatActivity {
     private String taskGroupName;
     private EditText taskTitle;
 
+    /**
+     * Initializes the activity, retrieves the task group ID, and sets up event listeners for UI components.
+     *
+     * @param savedInstanceState The saved instance state of the activity.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_addtodo);
 
-        // Initialize buttons
+        // Initialize buttons and input fields
         exitBtn = findViewById(R.id.exitbtn);
         createBtn = findViewById(R.id.createtodobtn);
         calendarBtn = findViewById(R.id.calendarbtn);
@@ -41,16 +51,18 @@ public class AddTaskActivity extends AppCompatActivity {
         ImageButton dueTodayBtn = findViewById(R.id.duetodaybtn);
         ImageButton dueTomorrowBtn = findViewById(R.id.duetomorrowbtn);
 
-        // Get the task group ID from Intent
+        // Get the task group ID and name from the Intent
         taskGroupId = getIntent().getStringExtra("TASK_GROUP_ID");
         taskGroupName = getIntent().getStringExtra("TASK_GROUP_NAME");
+
+        // Validate task group information
         if (taskGroupId == null || taskGroupId.isEmpty()) {
             Toast.makeText(this, "Task group not found", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        // Calendar button setup
+        // Set up the calendar button to select a deadline
         calendarBtn.setOnClickListener(view -> {
             MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
                     .setTitleText("Select Deadline")
@@ -64,30 +76,30 @@ public class AddTaskActivity extends AppCompatActivity {
             });
         });
 
-        // Set due date to today
+        // Set the deadline to today
         dueTodayBtn.setOnClickListener(view -> {
             Calendar calendar = Calendar.getInstance();
-            selectedDeadline = calendar.getTimeInMillis(); // Get today's date in milliseconds
+            selectedDeadline = calendar.getTimeInMillis();
             Toast.makeText(this, "Due date set to today", Toast.LENGTH_SHORT).show();
         });
 
-        // Set due date to tomorrow
+        // Set the deadline to tomorrow
         dueTomorrowBtn.setOnClickListener(view -> {
             Calendar calendar = Calendar.getInstance();
-            calendar.add(Calendar.DAY_OF_YEAR, 1); // Add one day to the current date
-            selectedDeadline = calendar.getTimeInMillis(); // Get tomorrow's date in milliseconds
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+            selectedDeadline = calendar.getTimeInMillis();
             Toast.makeText(this, "Due date set to tomorrow", Toast.LENGTH_SHORT).show();
         });
 
-        // Exit button setup
+        // Set up the exit button to navigate back to the task list
         exitBtn.setOnClickListener(view -> {
             Intent exitIntent = new Intent(AddTaskActivity.this, TodoActivity.class);
-            exitIntent.putExtra("TASK_GROUP_ID", taskGroupId); // Pass back the task group ID
+            exitIntent.putExtra("TASK_GROUP_ID", taskGroupId);
             exitIntent.putExtra("TASK_GROUP_NAME", taskGroupName);
             startActivity(exitIntent);
         });
 
-        // Create button setup
+        // Set up the create button to add a new task
         createBtn.setOnClickListener(view -> {
             if (selectedDeadline == 0) {
                 Toast.makeText(this, "Please set a deadline", Toast.LENGTH_SHORT).show();
@@ -96,7 +108,7 @@ public class AddTaskActivity extends AppCompatActivity {
 
             // Create task data
             Map<String, Object> taskData = new HashMap<>();
-            taskData.put("title", taskTitle.getText().toString()); // Replace with actual input
+            taskData.put("title", taskTitle.getText().toString());
             taskData.put("deadline", selectedDeadline);
             taskData.put("status", false); // Default status: not completed
 
@@ -105,6 +117,12 @@ public class AddTaskActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Adds a new task to the specified task group in Firestore.
+     *
+     * @param groupId  The ID of the task group to which the task will be added.
+     * @param newTask  A map containing the task details (title, deadline, etc.).
+     */
     private void addTaskToGroup(String groupId, Map<String, Object> newTask) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -149,6 +167,4 @@ public class AddTaskActivity extends AppCompatActivity {
                     Toast.makeText(this, "Failed to load task group: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
-
-
 }

@@ -8,17 +8,30 @@ import android.os.Build;
 
 import androidx.core.app.NotificationCompat;
 
+/**
+ * A utility class to handle the creation and display of notifications in the application.
+ * This class is responsible for managing notification channels, displaying notifications,
+ * and canceling them when necessary.
+ */
 public class NotificationHelper {
 
-    private static final String CHANNEL_ID = "task_due_channel";
+    private static final String CHANNEL_ID = "task_due_channel"; // Unique ID for the notification channel
     private Context context;
 
+    /**
+     * Constructs a NotificationHelper instance and creates the required notification channel.
+     *
+     * @param context The application context used for managing notifications.
+     */
     public NotificationHelper(Context context) {
         this.context = context;
         createNotificationChannel();
     }
 
-    // Create a notification channel (required for Android 8.0+)
+    /**
+     * Creates a notification channel for task due notifications.
+     * Notification channels are required for Android 8.0 (API level 26) and above.
+     */
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Task Due Notifications";
@@ -33,18 +46,25 @@ public class NotificationHelper {
         }
     }
 
-    // Cancel a notification
+    /**
+     * Cancels a notification with a fixed ID (1 in this implementation).
+     * Useful for dismissing task reminders when they are no longer relevant.
+     */
     public void cancelNotification() {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
-            notificationManager.cancel(1);  // Cancel notification ID 1
+            notificationManager.cancel(1); // Cancel notification with ID 1
         }
     }
 
-    // Show a notification
+    /**
+     * Displays a notification to remind the user of a task that is due today.
+     *
+     * @param taskTitle The title of the task to be displayed in the notification.
+     */
     public void showNotification(String taskTitle) {
         Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_notification_overlay)  // Use a custom icon if possible
+                .setSmallIcon(android.R.drawable.ic_notification_overlay) // Replace with a custom icon if available
                 .setContentTitle(taskTitle + " is due today!")
                 .setContentText("Reminder: Don't forget to complete your task.")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -52,7 +72,7 @@ public class NotificationHelper {
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
-            notificationManager.notify(1, notification);  // Notification ID 1
+            notificationManager.notify(1, notification); // Display notification with ID 1
         }
     }
 }

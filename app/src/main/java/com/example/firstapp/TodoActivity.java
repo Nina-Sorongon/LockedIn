@@ -1,7 +1,5 @@
 package com.example.firstapp;
 
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -29,6 +27,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This activity manages tasks within a task group. It supports viewing, filtering,
+ * deleting tasks, and displaying notifications for tasks due today.
+ */
 public class TodoActivity extends AppCompatActivity {
     private ImageButton backBtn;
     private ImageButton addtaskBtn;
@@ -40,6 +42,11 @@ public class TodoActivity extends AppCompatActivity {
     private boolean isFilterSpinnerInitialized = false;
     private NotificationHelper notificationHelper;
 
+    /**
+     * Initializes the activity and sets up UI components, intent data, and event listeners.
+     *
+     * @param savedInstanceState state information saved from a previous instance (if any).
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,25 +71,22 @@ public class TodoActivity extends AppCompatActivity {
         taskRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         taskRecyclerView.setAdapter(taskAdapter);
 
-        // Set task group name in TextView
         if (taskGroupName != null) {
             taskGroupNameTextView.setText(taskGroupName);
         }
 
-        // Load tasks from Firestore with default "All" filter
+        // Load tasks from Firestore
         if (taskGroupId != null) {
             loadTasksFromFirestore(taskGroupId, "All");
         } else {
             Toast.makeText(this, "Task group not found", Toast.LENGTH_SHORT).show();
         }
 
-        // Handle back button click
         backBtn.setOnClickListener(view -> {
             Intent backIntent = new Intent(TodoActivity.this, ProjectsActivity.class);
             startActivity(backIntent);
         });
 
-        // Handle add task button click
         addtaskBtn.setOnClickListener(view -> {
             Intent addtaskIntent = new Intent(TodoActivity.this, AddTaskActivity.class);
             addtaskIntent.putExtra("TASK_GROUP_ID", taskGroupId);
@@ -90,7 +94,6 @@ public class TodoActivity extends AppCompatActivity {
             startActivity(addtaskIntent);
         });
 
-        // Handle delete task group button click
         deleteTaskGroupBtn.setOnClickListener(view -> {
             if (taskGroupId != null) {
                 showConfirmationDialog(taskGroupId);
@@ -99,22 +102,19 @@ public class TodoActivity extends AppCompatActivity {
             }
         });
 
-        // Handle dropdown selection for filtering
         filterDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (isFilterSpinnerInitialized) {
                     String selectedFilter = parent.getItemAtPosition(position).toString();
-                    // Reload tasks with the selected filter
                     loadTasksFromFirestore(taskGroupId, selectedFilter);
                 } else {
-                    isFilterSpinnerInitialized = true; // Ignore the initial selection
+                    isFilterSpinnerInitialized = true;
                 }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                // Default to "All" filter
                 loadTasksFromFirestore(taskGroupId, "All");
             }
         });
@@ -122,6 +122,12 @@ public class TodoActivity extends AppCompatActivity {
         notificationHelper = new NotificationHelper(this);
     }
 
+    /**
+     * Loads tasks from Firestore, applies the selected filter, and sets up notifications for tasks due today.
+     *
+     * @param taskGroupId the ID of the task group to load tasks from.
+     * @param filter      the filter to apply (e.g., "All", "Ongoing", "Completed").
+     */
     private void loadTasksFromFirestore(String taskGroupId, String filter) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -130,25 +136,21 @@ public class TodoActivity extends AppCompatActivity {
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        tasks.clear(); // Clear existing tasks
+                        tasks.clear();
                         List<Map<String, Object>> taskList = (List<Map<String, Object>>) documentSnapshot.get("tasks");
                         if (taskList != null) {
-                            tasks.addAll(taskList); // Populate tasks
+                            tasks.addAll(taskList);
                         }
 
-                        sortTasksByDeadline(tasks); // Sort tasks by deadline
-
-                        // Apply the selected filter
+                        sortTasksByDeadline(tasks);
                         applyFilter(filter);
 
-                        // Check each task's due date and notify if necessary
                         for (Map<String, Object> task : tasks) {
                             long deadline = (long) task.get("deadline");
                             boolean status = task.get("status") != null && (boolean) task.get("status");
 
-                            // Check if task is due today and not completed
                             if (!status && isTaskDueToday(deadline)) {
-                                showTaskDueNotification(task); // Notify the user
+                                showTaskDueNotification(task);
                             }
                         }
 
@@ -159,6 +161,12 @@ public class TodoActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> Toast.makeText(this, "Failed to load tasks: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
+    /**
+     * Checks if a task is due today.
+     *
+     * @param deadlineMillis the deadline in milliseconds.
+     * @return true if the task is due today, false otherwise.
+     */
     private boolean isTaskDueToday(long deadlineMillis) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(deadlineMillis);
@@ -169,51 +177,52 @@ public class TodoActivity extends AppCompatActivity {
                 calendar.get(Calendar.DAY_OF_MONTH) == today.get(Calendar.DAY_OF_MONTH);
     }
 
+    /**
+     * Shows a notification for a task that is due today.
+     *
+     * @param task the task to notify about.
+     */
     private void showTaskDueNotification(Map<String, Object> task) {
         String taskTitle = (String) task.get("title");
 
-        // Create a notification here
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(TodoActivity.this, "default")  // Use 'this' for context
-                .setSmallIcon(R.drawable.ic_launcher_foreground) // Use your own icon
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(TodoActivity.this, "default")
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("Task Due Today!")
                 .setContentText(taskTitle + " is due today!")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true);
 
-        // NotificationManager to display the notification
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(TodoActivity.this);
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
         notificationManager.notify((int) System.currentTimeMillis(), builder.build());
     }
 
+    /**
+     * Deletes a task group from Firestore.
+     *
+     * @param taskGroupId the ID of the task group to delete.
+     */
     private void deleteTaskGroup(String taskGroupId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        // Delete the task group document from Firestore
         db.collection("taskGroups")
                 .document(taskGroupId)
                 .delete()
                 .addOnSuccessListener(aVoid -> {
-                    // Task group deleted successfully, navigate back to ProjectsActivity
                     Toast.makeText(this, "Task group deleted", Toast.LENGTH_SHORT).show();
                     Intent backIntent = new Intent(TodoActivity.this, ProjectsActivity.class);
                     startActivity(backIntent);
                 })
-                .addOnFailureListener(e -> {
-                    // If deletion fails, show an error message
-                    Toast.makeText(this, "Failed to delete task group: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                .addOnFailureListener(e -> Toast.makeText(this, "Failed to delete task group: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
+    /**
+     * Applies the specified filter to the list of tasks and updates the RecyclerView.
+     *
+     * @param filter the filter to apply ("All", "Ongoing", or "Completed").
+     */
     private void applyFilter(String filter) {
         filteredTasks.clear();
 
@@ -231,34 +240,30 @@ public class TodoActivity extends AppCompatActivity {
         }
 
         sortTasksByDeadline(filteredTasks);
-        taskAdapter.updateTaskList(new ArrayList<>(filteredTasks)); // Pass a new instance
+        taskAdapter.updateTaskList(new ArrayList<>(filteredTasks));
     }
 
+    /**
+     * Displays a confirmation dialog to delete a task group.
+     *
+     * @param taskGroupId the ID of the task group to delete.
+     */
     private void showConfirmationDialog(final String taskGroupId) {
         new AlertDialog.Builder(this)
                 .setTitle("Are you sure?")
                 .setMessage("This action will permanently delete the task group and all its tasks. Are you sure you want to proceed?")
-                .setPositiveButton("Yes", (dialog, which) -> {
-                    // User confirmed, proceed to delete
-                    deleteTaskGroup(taskGroupId);
-                })
-                .setNegativeButton("No", (dialog, which) -> {
-                    // User canceled, just dismiss the dialog
-                    dialog.dismiss();
-                })
-                .setCancelable(false) // Prevent dismissing the dialog by clicking outside
+                .setPositiveButton("Yes", (dialog, which) -> deleteTaskGroup(taskGroupId))
+                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                .setCancelable(false)
                 .show();
     }
 
+    /**
+     * Sorts tasks by their deadline in ascending order.
+     *
+     * @param tasks the list of tasks to sort.
+     */
     private void sortTasksByDeadline(List<Map<String, Object>> tasks) {
-        Collections.sort(tasks, new Comparator<Map<String, Object>>() {
-            @Override
-            public int compare(Map<String, Object> task1, Map<String, Object> task2) {
-                Long deadline1 = (Long) task1.get("deadline");
-                Long deadline2 = (Long) task2.get("deadline");
-
-                return deadline1.compareTo(deadline2);
-            }
-        });
+        Collections.sort(tasks, Comparator.comparingLong(task -> (long) task.get("deadline")));
     }
 }

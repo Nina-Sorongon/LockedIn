@@ -183,7 +183,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             new DatePickerDialog(context, (view, year, month, dayOfMonth) -> {
                 calendar.set(year, month, dayOfMonth);
                 String selectedDate = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(calendar.getTime());
-                deadlineView.setText("Due: " + selectedDate);
+                deadlineView.setText("Edit Due Date: " + selectedDate);
                 tasks.get(taskIndex).put("deadline", calendar.getTimeInMillis());
             }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show();
         });

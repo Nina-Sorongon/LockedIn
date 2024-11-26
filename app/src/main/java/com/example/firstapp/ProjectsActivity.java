@@ -3,9 +3,7 @@ package com.example.firstapp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -24,9 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-
+/**
+ * Manages the display and interaction of task groups for the current user.
+ */
 public class ProjectsActivity extends AppCompatActivity {
     private RecyclerView taskGroupsRecyclerView;
     private List<Map<String, Object>> taskGroups;
@@ -40,49 +38,43 @@ public class ProjectsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_projects);
 
-        // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance();
-
-        // Check if user is authenticated
         if (auth.getCurrentUser() == null) {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
             return;
         }
 
-        // Initialize Firestore
         db = FirebaseFirestore.getInstance();
+        initializeViews();
+        fetchTaskGroups();
+    }
 
-        // Initialize RecyclerView and TextView
+    /**
+     * Initializes views and sets up event listeners for buttons.
+     */
+    private void initializeViews() {
         taskGroupsRecyclerView = findViewById(R.id.taskGroupsRecyclerView);
         taskGroupsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        noTaskGroupText = findViewById(R.id.noTaskGroupMessage); // Initialize the TextView
+        noTaskGroupText = findViewById(R.id.noTaskGroupMessage);
         noTaskGroupIcon = findViewById(R.id.noTaskGroupIcon);
-
         taskGroups = new ArrayList<>();
-        taskGroupsRecyclerView.setAdapter(new TaskGroupAdapter());
+        taskGroupsRecyclerView.setAdapter(new TaskGroupAdapter(taskGroups, this));
 
-        // Fetch Task Groups
-        fetchTaskGroups();
-
-        // Initialize "Add New Group" button with ActivityResultLauncher
         ImageButton newProjectBtn = findViewById(R.id.newprojectbtn);
-
         newProjectBtn.setOnClickListener(view -> {
-            Intent intent = new Intent(this, AddNewGroupActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(this, AddNewGroupActivity.class));
         });
-
 
         ImageButton userButton = findViewById(R.id.user);
         userButton.setOnClickListener(view -> {
-            // Navigate to UserPageActivity
-            Intent intent = new Intent(ProjectsActivity.this, UserPageActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(this, UserPageActivity.class));
         });
     }
 
+    /**
+     * Fetches task groups associated with the current user and updates the RecyclerView.
+     */
     private void fetchTaskGroups() {
         taskGroups.clear();
         String userId = auth.getCurrentUser().getUid();
@@ -94,22 +86,9 @@ public class ProjectsActivity extends AppCompatActivity {
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         Map<String, Object> taskGroup = document.getData();
                         taskGroup.put("id", document.getId());
-
-                        // Fetch tasks within the same query
-                        List<Map<String, Object>> tasks = (List<Map<String, Object>>) document.get("tasks");
-                        if (tasks != null) {
-                            taskGroup.put("totalTasks", tasks.size());
-                            taskGroup.put("completedTasks", (int) tasks.stream()
-                                    .filter(task -> Boolean.TRUE.equals(task.get("status")))
-                                    .count());
-                        } else {
-                            taskGroup.put("totalTasks", 0);
-                            taskGroup.put("completedTasks", 0);
-                        }
-
+                        enrichTaskGroupData(taskGroup, document);
                         taskGroups.add(taskGroup);
                     }
-
                     taskGroupsRecyclerView.getAdapter().notifyDataSetChanged();
                     updateNoTaskGroupMessage();
                 })
@@ -119,6 +98,28 @@ public class ProjectsActivity extends AppCompatActivity {
                 });
     }
 
+    /**
+     * Enriches task group data with the number of total and completed tasks.
+     *
+     * @param taskGroup The task group data.
+     * @param document  The Firestore document snapshot.
+     */
+    private void enrichTaskGroupData(Map<String, Object> taskGroup, QueryDocumentSnapshot document) {
+        List<Map<String, Object>> tasks = (List<Map<String, Object>>) document.get("tasks");
+        if (tasks != null) {
+            taskGroup.put("totalTasks", tasks.size());
+            taskGroup.put("completedTasks", (int) tasks.stream()
+                    .filter(task -> Boolean.TRUE.equals(task.get("status")))
+                    .count());
+        } else {
+            taskGroup.put("totalTasks", 0);
+            taskGroup.put("completedTasks", 0);
+        }
+    }
+
+    /**
+     * Updates the visibility of the "No Task Groups" message.
+     */
     private void updateNoTaskGroupMessage() {
         if (taskGroups.isEmpty()) {
             noTaskGroupText.setVisibility(View.VISIBLE);
@@ -129,97 +130,4 @@ public class ProjectsActivity extends AppCompatActivity {
             noTaskGroupIcon.setVisibility(View.GONE);
         }
     }
-
-
-    // Inner class for RecyclerView Adapter
-    private class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.TaskGroupViewHolder> {
-
-        @NonNull
-        @Override
-        public TaskGroupViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(ProjectsActivity.this).inflate(R.layout.item_task_group_card, parent, false);
-            return new TaskGroupViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull TaskGroupViewHolder holder, int position) {
-            Map<String, Object> taskGroup = taskGroups.get(position);
-
-            holder.taskGroupName.setText(taskGroup.get("name") != null ? taskGroup.get("name").toString() : "Unnamed Group");
-
-            String groupId = taskGroup.get("id") != null ? taskGroup.get("id").toString() : "";
-            if (!groupId.isEmpty()) {
-                db.collection("taskGroups")
-                        .document(groupId)
-                        .get()
-                        .addOnSuccessListener(documentSnapshot -> {
-                            if (documentSnapshot.exists()) {
-                                List<Map<String, Object>> tasks = (List<Map<String, Object>>) documentSnapshot.get("tasks");
-                                if (tasks != null) {
-                                    int totalTasks = tasks.size();
-                                    int completedTasks = 0;
-
-                                    // Counter for completed tasks
-                                    for (Map<String, Object> task : tasks) {
-                                        Boolean status = (Boolean) task.get("status");
-                                        if (status != null && status) {
-                                            completedTasks++;
-                                        }
-                                    }
-
-                                    holder.taskCount.setText(completedTasks + " of " + totalTasks + " tasks completed");
-                                } else {
-                                    holder.taskCount.setText("No tasks");
-                                }
-                            } else {
-                                holder.taskCount.setText("No tasks found");
-                            }
-                        })
-                        .addOnFailureListener(e -> holder.taskCount.setText("Error loading tasks"));
-            } else {
-                holder.taskCount.setText("No tasks");
-            }
-        }
-
-
-
-        @Override
-        public int getItemCount() {
-            return taskGroups.size();
-        }
-
-        // ViewHolder class
-        class TaskGroupViewHolder extends RecyclerView.ViewHolder {
-            TextView taskGroupName;
-            TextView taskCount;
-
-            public TaskGroupViewHolder(@NonNull View itemView) {
-                super(itemView);
-                taskGroupName = itemView.findViewById(R.id.taskGroupName);
-                taskCount = itemView.findViewById(R.id.taskCount);
-
-                // Set click listener on the entire item view
-                itemView.setOnClickListener(view -> {
-                    int position = getAdapterPosition();
-                    if (position != RecyclerView.NO_POSITION) {
-                        // Get the clicked task group data
-                        Map<String, Object> taskGroup = taskGroups.get(position);
-
-                        // Extract the task group ID or any other data
-                        String taskGroupId = taskGroup.get("id") != null ? taskGroup.get("id").toString() : "";
-                        String taskGroupName = taskGroup.get("name") != null ? taskGroup.get("name").toString() : "Unnamed Group";
-
-                        // Create an intent to start TodoActivity
-                        Intent intent = new Intent(ProjectsActivity.this, TodoActivity.class);
-                        intent.putExtra("TASK_GROUP_ID", taskGroupId); // Pass the task group ID
-                        intent.putExtra("TASK_GROUP_NAME", taskGroupName); // Optionally pass the name
-
-                        // Start the activity
-                        startActivity(intent);
-                    }
-                });
-            }
-        }
-    }
 }
-

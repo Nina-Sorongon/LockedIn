@@ -22,6 +22,7 @@
         android:layout_marginTop="20dp"
         app:srcCompat="@drawable/backbtnlight"/>
 
+
     <ImageView
         android:id="@+id/header"
         android:layout_width="0dp"
@@ -36,17 +37,17 @@
 
     <ImageView
         android:id="@+id/profilepicture"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="121dp"
+        android:layout_height="117dp"
         android:layout_marginTop="300dp"
         android:background="@null"
         android:scaleType="centerCrop"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.112"
+        app:layout_constraintHorizontal_bias="0.061"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/profilepicture" />
+        app:srcCompat="@drawable/profilepicdefault3" />
 
     <TextView
         android:id="@+id/emailtext"

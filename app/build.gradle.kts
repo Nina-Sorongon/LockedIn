@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.application)  // Applying the Android plugin
 }
 
 android {
@@ -46,13 +46,10 @@ dependencies {
     // Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
 
-    // Add Firebase Auth dependency
+    // Firebase dependencies
     implementation("com.google.firebase:firebase-auth")
-    // If using Analytics, ensure it is added too
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore")
-
-
 }
 
 // Apply the Google Services plugin

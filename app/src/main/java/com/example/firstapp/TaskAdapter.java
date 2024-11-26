@@ -31,11 +31,13 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     private final String taskGroupId; // The ID of the task group this list belongs to
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
     private final Context context;
+    private NotificationHelper notificationHelper;
 
     public TaskAdapter(List<Map<String, Object>> tasks, String taskGroupId, Context context) {
         this.tasks = tasks;
         this.taskGroupId = taskGroupId;
         this.context = context;
+        this.notificationHelper = new NotificationHelper(context);
     }
 
     @NonNull
@@ -89,7 +91,33 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                     .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                     .show();
         });
+
+        // Check the due date and send notifications if necessary
+        checkDueDateAndNotify(task);
     }
+
+    // Check if the task's due date is today and show notification if necessary
+    private void checkDueDateAndNotify(Map<String, Object> task) {
+        long deadline = task.get("deadline") != null ? (long) task.get("deadline") : 0;
+        if (deadline > 0) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(deadline);
+
+            // Check if the due date is today
+            if (calendar.get(Calendar.YEAR) == Calendar.getInstance().get(Calendar.YEAR) &&
+                    calendar.get(Calendar.MONTH) == Calendar.getInstance().get(Calendar.MONTH) &&
+                    calendar.get(Calendar.DAY_OF_MONTH) == Calendar.getInstance().get(Calendar.DAY_OF_MONTH)) {
+
+                // Only show notification if the task is not completed
+                boolean isCompleted = task.get("status") != null && (boolean) task.get("status");
+                if (!isCompleted) {
+                    NotificationHelper notificationHelper = new NotificationHelper(context);
+                    notificationHelper.showNotification(task.get("title").toString());
+                }
+            }
+        }
+    }
+
 
 
     private void deleteTaskFromFirestore(String taskId) {

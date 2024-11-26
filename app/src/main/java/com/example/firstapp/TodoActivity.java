@@ -1,7 +1,9 @@
 package com.example.firstapp;
 
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
-import android.media.Image;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -12,12 +14,16 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -32,6 +38,7 @@ public class TodoActivity extends AppCompatActivity {
     private List<Map<String, Object>> tasks;
     private List<Map<String, Object>> filteredTasks = new ArrayList<>();
     private boolean isFilterSpinnerInitialized = false;
+    private NotificationHelper notificationHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,6 +118,8 @@ public class TodoActivity extends AppCompatActivity {
                 loadTasksFromFirestore(taskGroupId, "All");
             }
         });
+
+        notificationHelper = new NotificationHelper(this);
     }
 
     private void loadTasksFromFirestore(String taskGroupId, String filter) {
@@ -131,11 +140,59 @@ public class TodoActivity extends AppCompatActivity {
 
                         // Apply the selected filter
                         applyFilter(filter);
+
+                        // Check each task's due date and notify if necessary
+                        for (Map<String, Object> task : tasks) {
+                            long deadline = (long) task.get("deadline");
+                            boolean status = task.get("status") != null && (boolean) task.get("status");
+
+                            // Check if task is due today and not completed
+                            if (!status && isTaskDueToday(deadline)) {
+                                showTaskDueNotification(task); // Notify the user
+                            }
+                        }
+
                     } else {
                         Toast.makeText(this, "Task group document does not exist", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .addOnFailureListener(e -> Toast.makeText(this, "Failed to load tasks: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+    }
+
+    private boolean isTaskDueToday(long deadlineMillis) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(deadlineMillis);
+
+        Calendar today = Calendar.getInstance();
+        return calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                calendar.get(Calendar.MONTH) == today.get(Calendar.MONTH) &&
+                calendar.get(Calendar.DAY_OF_MONTH) == today.get(Calendar.DAY_OF_MONTH);
+    }
+
+    private void showTaskDueNotification(Map<String, Object> task) {
+        String taskTitle = (String) task.get("title");
+
+        // Create a notification here
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(TodoActivity.this, "default")  // Use 'this' for context
+                .setSmallIcon(R.drawable.ic_launcher_foreground) // Use your own icon
+                .setContentTitle("Task Due Today!")
+                .setContentText(taskTitle + " is due today!")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true);
+
+        // NotificationManager to display the notification
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(TodoActivity.this);
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        notificationManager.notify((int) System.currentTimeMillis(), builder.build());
     }
 
     private void deleteTaskGroup(String taskGroupId) {
@@ -193,15 +250,14 @@ public class TodoActivity extends AppCompatActivity {
                 .show();
     }
 
-
-
-    private void sortTasksByDeadline(List<Map<String, Object>> taskList) {
-        Collections.sort(taskList, new Comparator<Map<String, Object>>() {
+    private void sortTasksByDeadline(List<Map<String, Object>> tasks) {
+        Collections.sort(tasks, new Comparator<Map<String, Object>>() {
             @Override
             public int compare(Map<String, Object> task1, Map<String, Object> task2) {
-                long deadline1 = (long) task1.get("deadline");
-                long deadline2 = (long) task2.get("deadline");
-                return Long.compare(deadline1, deadline2);
+                Long deadline1 = (Long) task1.get("deadline");
+                Long deadline2 = (Long) task2.get("deadline");
+
+                return deadline1.compareTo(deadline2);
             }
         });
     }

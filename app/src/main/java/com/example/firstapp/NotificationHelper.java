@@ -53,7 +53,7 @@ public class NotificationHelper {
     public void cancelNotification() {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
-            notificationManager.cancel(1); // Cancel notification with ID 1
+            notificationManager.cancel(1);
         }
     }
 
@@ -64,7 +64,7 @@ public class NotificationHelper {
      */
     public void showNotification(String taskTitle) {
         Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_notification_overlay) // Replace with a custom icon if available
+                .setSmallIcon(android.R.drawable.ic_notification_overlay)
                 .setContentTitle(taskTitle + " is due today!")
                 .setContentText("Reminder: Don't forget to complete your task.")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -72,7 +72,7 @@ public class NotificationHelper {
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
-            notificationManager.notify(1, notification); // Display notification with ID 1
+            notificationManager.notify(1, notification);
         }
     }
 }

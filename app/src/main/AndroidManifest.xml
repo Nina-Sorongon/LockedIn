@@ -40,7 +40,7 @@
         <activity android:name=".AddTaskActivity"></activity>
 
         <!-- Receiver for handling boot event and reminders -->
-        <receiver android:name=".ReminderNotificationReceiver"
+        <receiver android:name=".NotificationHelper"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
